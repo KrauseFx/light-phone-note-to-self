@@ -56,3 +56,6 @@ build-iPhoneSimulator/
 # .rubocop-https?--*
 /.keys
 /notes_already_stored
+
+.DS_STORE
+/notes

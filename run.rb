@@ -1,4 +1,5 @@
 require 'pry'
+require 'fileutils'
 require 'excon'
 require 'json'
 require 'net/http'
@@ -33,20 +34,44 @@ class Run
       note_content = download_note_content_with_id(note.fetch("id"))
       if note_content.length > 0
         title = note.fetch("attributes").fetch("title")
-        puts "Processing note with id #{note.fetch('id')} and content #{note_content[0..50]}..."
-        send_email(title: title, content: note_content)
+        updated_at = note.fetch("attributes").fetch("updated_at")
+        if title == "Untitled" # this is the default title for notes on the Light Phone
+          title = note_content.split("\n").first
+        end
+        puts "Processing note with id #{note.fetch('id')} and content #{title}..."
+        store_note_locally(note.fetch("id"), title, note_content, updated_at)
+
+        if ENV['SENDGRID_BEARER_TOKEN'].to_s.length > 0
+          send_email(title: title, content: note_content)
+        else
+          puts "No SENDGRID_BEARER_TOKEN found, skipping email sending"
+        end
         append_to_notes_already_stored(note.fetch("id"))
         puts "Successfully sent email for note with id #{note.fetch('id')}"
       else
         puts "Note with id #{note.fetch('id')} has no content"
       end
-    rescue => e
-      puts "Error processing note with id #{note.fetch('id')}: #{e}"
-      binding.pry
+    # rescue => e
+    #   puts "Error processing note with id #{note.fetch('id')}: #{e}"
+    #   binding.pry
     end
   end
 
   private
+  def store_note_locally(note_id, title, content, updated_at)
+    FileUtils.mkdir_p("notes")
+    file_safe_title = title.gsub(/[^0-9a-z ]/i, '').gsub(" ", "_")
+    file_safe_updated_at = updated_at.gsub(":", "-")
+    to_store = []
+    to_store << title if title != content
+    to_store << content
+    to_store << updated_at
+    File.open("notes/#{file_safe_updated_at}_#{file_safe_title}.txt", "w") do |f|
+      f.puts(to_store.join("\n\n"))
+    end
+    puts("Stored note with id #{note_id} locally")
+  end
+
   def notes_already_stored
     if File.exist?("notes_already_stored")
       return File.read("notes_already_stored").split("\n")
@@ -76,10 +101,6 @@ class Run
   end
   
   def send_email(title:, content:)
-    if title == "Untitled" # this is the default title for notes on the Light Phone
-      title = content.split("\n").first
-    end
-
     email_post = Excon.post(
       'https://api.sendgrid.com/v3/mail/send',
       headers: {
