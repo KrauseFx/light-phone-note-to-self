@@ -12,6 +12,8 @@ When using the Light Phone on-the-go, I want to quickly jot down notes, and not 
 
 I'm a big fan of Inbox Zero, and as such, all my incoming emails are actionable. I already heavily use [Email Me](https://apps.apple.com/de/app/note-taking-email-me/id1090744587) on my iPhone, and a self-built plugin for Raycast (there is also a more [powerful Raycast plugin](https://www.raycast.com/peduarte/dash-off) available, however I want it to be a single-click feature).
 
+Using this script, every time you write a new note on your Light Phone, it will automatically be sent to your email inbox, allowing you to process it later.
+
 ### Export your notes from the Light Phone
 
 <img src="screenshots/exported_notes.png" width="250" align="right" style="margin-left: 20px; margin-bottom: 20px;">
@@ -57,5 +59,11 @@ There are many different ways to run scripts on a schedule, for example using `c
 1. `crontab -e`
 1. Add a new line with the following content, which will run the script every hour your computer is running:
 ```
-0 * * * * /bin/bash -l -c 'cd /path/to/light-phone-note-to-self/light-phone-note-to-self && source .keys && bundle exec ruby run.rb > /path/to/light-phone-note-to-self/light-phone-note-to-self/stdout.log 2> /path/to/light-phone-note-to-self/light-phone-note-to-self/stderr.log'
-```
+0 * * * * /bin/bash -l -c 'cd /absolute_path/light-phone-note-to-self && source .keys && /absolute_path_to/bundle exec ruby run.rb > /absolute_path/light-phone-note-to-self/stdout.log 2> /absolute_path/light-phone-note-to-self/stderr.log'```
+
+Note that each setup is different, and `crontab` may be tricky to deal with. You can see how I'm pointing directly to my `bundle` binary (you can get it by running `which bundle`) to prevent any issues with the `PATH` variable.
+
+## Known Limitations
+
+- [ ] If you update an existing note, it won't get re-processed
+- [ ] No support for audio notes
