@@ -18,7 +18,6 @@ I'm a big fan of Inbox Zero, and as such, all my incoming emails are actionable.
 
 As an additional backup, it can be useful to export your notes from the Light Phone. The notes will be stored as plain-text files on your computer locally, allowing you to easily search, archive, and share them.
 
-
 ## Installation
 
 1. `git clone https://github.com/KrauseFx/light-phone-note-to-self`
@@ -56,6 +55,9 @@ bundle exec ruby run.rb
 There are many different ways to run scripts on a schedule, for example using `cron` on macOS or Linux. To run the script every hour, you can use the following steps:
 
 1. `crontab -e`
-1. Add a new line with the following content: `0 * * * * /bin/bash -l -c 'cd /path/to/light-phone-note-to-self && source .env && bundle exec ruby run.rb'`
+1. Add a new line with the following content, which will run the script every hour your computer is running:
+```
+0 * * * * /bin/bash -l -c 'cd /path/to/light-phone-note-to-self && source .env && bundle exec ruby run.rb'
+```
 
 
