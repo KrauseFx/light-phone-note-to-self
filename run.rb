@@ -25,19 +25,41 @@ class Run
     ).body).fetch("data")
     
     all_notes.each do |note|
+      if notes_already_stored.include?(note.fetch("id"))
+        puts "Note with id #{note.fetch('id')} has already been processed"
+        next
+      end
+
       note_content = download_note_content_with_id(note.fetch("id"))
       if note_content.length > 0
         title = note.fetch("attributes").fetch("title")
+        puts "Processing note with id #{note.fetch('id')} and content #{note_content[0..50]}..."
         send_email(title: title, content: note_content)
+        append_to_notes_already_stored(note.fetch("id"))
+        puts "Successfully sent email for note with id #{note.fetch('id')}"
       else
         puts "Note with id #{note.fetch('id')} has no content"
       end
     rescue => e
       puts "Error processing note with id #{note.fetch('id')}: #{e}"
+      binding.pry
     end
   end
 
   private
+  def notes_already_stored
+    if File.exist?("notes_already_stored")
+      return File.read("notes_already_stored").split("\n")
+    end
+    return []
+  end
+
+  def append_to_notes_already_stored(note_id)
+    File.open("notes_already_stored", "a") do |f|
+      f.puts(note_id)
+    end
+  end
+
   def download_note_content_with_id(note_id)
     presigned_get_url = JSON.parse(Excon.get(
       "https://production.lightphonecloud.com/api/notes/#{note_id}/generate_presigned_get_url",
@@ -54,8 +76,7 @@ class Run
   end
   
   def send_email(title:, content:)
-    binding.pry
-    if title == "Untitled"
+    if title == "Untitled" # this is the default title for notes on the Light Phone
       title = content.split("\n").first
     end
 
@@ -66,9 +87,7 @@ class Run
         'Content-Type' => 'application/json'
       },
       body: {
-        from: {
-          email: ENV.fetch('SENDGRID_FROM')
-        },
+        from: { email: ENV.fetch('SENDGRID_FROM') },
         content: [
           {
             type: 'text/plain',
@@ -77,19 +96,15 @@ class Run
         ],
         personalizations: [
           {
-            to: [
-              {
-                email: ENV.fetch('SENDGRID_TO')
-              }
-            ],
+            to: [{ email: ENV.fetch('SENDGRID_TO') } ],
             subject: "[Major 🔑] #{title}"
           }
         ]
       }.to_json
     )
-
-    binding.pry
-    puts 'hi'
+    if email_post.status != 202
+      raise "Error sending email: #{email_post.body}"
+    end
   end
 
   def headers
