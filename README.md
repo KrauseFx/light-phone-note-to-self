@@ -59,7 +59,8 @@ There are many different ways to run scripts on a schedule, for example using `c
 1. `crontab -e`
 1. Add a new line with the following content, which will run the script every hour your computer is running:
 ```
-0 * * * * /bin/bash -l -c 'cd /absolute_path/light-phone-note-to-self && source .keys && /absolute_path_to/bundle exec ruby run.rb > /absolute_path/light-phone-note-to-self/stdout.log 2> /absolute_path/light-phone-note-to-self/stderr.log'```
+0 * * * * /bin/bash -l -c 'cd /absolute_path/light-phone-note-to-self && source .keys && /absolute_path_to/bundle exec ruby run.rb > /absolute_path/light-phone-note-to-self/stdout.log 2> /absolute_path/light-phone-note-to-self/stderr.log'
+```
 
 Note that each setup is different, and `crontab` may be tricky to deal with. You can see how I'm pointing directly to my `bundle` binary (you can get it by running `which bundle`) to prevent any issues with the `PATH` variable.
 
